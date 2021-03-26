@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <link rel="icon" type="image/png" href="../images/favicon.png" />
+    <link rel="stylesheet" href="../css/main.css" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>iPetFood - O seu pet merece!</title>
+
+    <!-- Socket configuration -->
+    <script>
+      var cart = [];
+      (async function () {
+        fetch("/api/orders", {
+          method: "GET",
+        })
+          .then(async (res) => {
+            const json = await res.json();
+            updateMenu(json.orders);
+          })
+          .catch((e) => {
+            console.error(e);
+          });
+      })();
+
+      function updateMenu(orders) {
+        var menuElement = document.getElementById("o-menu");
+        menuElement.innerHTML = "";
+
+        var id = 0;
+        for (let order of orders) {
+          id++;
+
+          var itemElement = document.createElement("div");
+          itemElement.className = "menu-item";
+          itemElement.style = "width: 100%";
+
+          // item.name
+          var itemName = document.createElement("h3");
+          itemName.className = "mv-2 black-high";
+          itemName.innerHTML = "Pedido #" + id;
+          itemElement.appendChild(itemName);
+
+          var price = 0;
+          var ul = document.createElement("ul");
+          for (let item of order) {
+            var li = document.createElement("li");
+            li.innerHTML = item.amount + "x " + item.item.name;
+            ul.appendChild(li);
+            price += item.amount * item.item.price_br;
+          }
+          itemElement.appendChild(ul);
+
+          var itemPrice = document.createElement("p");
+          itemPrice.className = "mv-2 black-high";
+          itemPrice.innerHTML = currencyBRA(price);
+          itemElement.appendChild(itemPrice);
+
+          menuElement.appendChild(itemElement);
+        }
+      }
+
+      function currencyBRA(value) {
+        return value.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRA",
+        });
+      }
+
+      function finishDelivery(e) {
+        fetch("/api/orders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ order: cart }),
+        })
+          .then(() => {
+            alert("Pedido realizado com sucesso!");
+          })
+          .catch((error) => {
+            alert("Não foi possível fazer o pedido. Tente novamente!");
+          });
+      }
+    </script>
+  </head>
+
+  <body>
+    <!-- Header -->
+    <header class="page-header">
+      <div style="display: flex; align-items: center">
+        <a href="/"><img src="../images/icon.png" /></a>
+        <a href="/"><h2 class="white-high">iPetFood</h2></a>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <div>
+      <div id="o-menu"></div>
+    </div>
+  </body>
+</html>
